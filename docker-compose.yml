@@ -11,6 +11,17 @@ services:
     networks:
       - exchange
 
+  db:
+    container_name: db
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: currencies
+    ports:
+      - "3306:3306"
+    networks:
+      - exchange
+
 
 networks:
   exchange:
