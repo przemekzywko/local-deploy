@@ -22,6 +22,101 @@ services:
     networks:
       - exchange
 
+  exchange-api:
+    container_name: exchange-api
+    build: ../exchange-api
+    environment:
+      RABBIT_HOST: rabbit
+      RABBIT_PORT: 5672
+      RABBIT_USERNAME: guest
+      RABBIT_PASSWORD: guest
+      RABBIT_RATES_QUEUE_NAME: rates_queue
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      DB_NAME: currencies
+      NBP_BASE_URL: http://api.nbp.pl/api/exchangerates
+    depends_on:
+      - rabbit
+      - db
+    ports:
+      - "8085:8083"
+    networks:
+      - exchange
+
+  currency-provider:
+    container_name: currency-provider
+    build: ../currency-provider
+    environment:
+      RABBIT_HOST: rabbit
+      RABBIT_PORT: 5672
+      RABBIT_USERNAME: guest
+      RABBIT_PASSWORD: guest
+      RABBIT_RATES_QUEUE_NAME: rates_queue
+      NBP_BASE_URL: http://api.nbp.pl/api/exchangerates
+    depends_on:
+      - rabbit
+      - db
+    ports:
+      - "8081:8081"
+    networks:
+      - exchange
+
+  mail-service:
+    container_name: mail-service
+    build: ../mail-service
+    environment:
+      RABBIT_HOST: rabbit
+      RABBIT_PORT: 5672
+      RABBIT_USERNAME: guest
+      RABBIT_PASSWORD: guest
+      RABBIT_CONFIRMATION_QUEUE_NAME: confirmation_queue
+      SPRING_MAIL_HOST: smtp.mailgun.org
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: 0069cece63ad30
+      SPRING_MAIL_PASSWORD: 753a9d9269109d
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: true
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: true
+    depends_on:
+      - rabbit
+    ports:
+      - "8086:8086"
+    networks:
+      - exchange
+
+  currency-persistence-service:
+    container_name: currency-persistence-service
+    build: ../currency-presistenvce-service
+    environment:
+      RABBIT_HOST: rabbit
+      RABBIT_PORT: 5672
+      RABBIT_USERNAME: guest
+      RABBIT_PASSWORD: guest
+      RABBIT_RATES_QUEUE_NAME: rates_queue
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      DB_NAME: currencies
+    depends_on:
+      - rabbit
+      - db
+    ports:
+      - "8082:8082"
+    networks:
+      - exchange
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.3
+    command: "start-dev"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    networks:
+      - exchange
 
 networks:
   exchange:
